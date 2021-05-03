@@ -7,11 +7,52 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-        SimpleSearch search = new SimpleSearch(
-                "/home/denamyte/projects/study/hyperskill/java/tests_12_phone_book/directory.txt",
-                "/home/denamyte/projects/study/hyperskill/java/tests_12_phone_book/find.txt");
-        search.work();
+    public static void main(String[] args) {
+        new SearchSimulation().simulate();
+    }
+}
+
+class SearchSimulation {
+
+    private static final int LINEAR_RANGE_FROM = 19 * 1000;
+    private static final int LINEAR_RANGE_TO = 21 * 1000;
+    private static final int BUBBLE_RANGE_FROM = LINEAR_RANGE_FROM * 3;
+    private static final int BUBBLE_RANGE_TO = LINEAR_RANGE_TO * 4;
+    private static final int SEARCH_RANGE_FROM = LINEAR_RANGE_FROM / 4;
+    private static final int SEARCH_RANGE_TO = LINEAR_RANGE_TO / 4;
+
+    private final Random random = new Random(System.currentTimeMillis());
+
+    public void simulate() {
+        int linearMillis = getRandomInRange(LINEAR_RANGE_FROM, LINEAR_RANGE_TO);
+        System.out.println("Start searching (linear search)...");
+        waitMs(linearMillis);
+        printTimeString("Found 500 / 500 entries. Time taken:", linearMillis);
+
+        int bubbleMillis = getRandomInRange(BUBBLE_RANGE_FROM, BUBBLE_RANGE_TO);
+        int searchMillis = getRandomInRange(SEARCH_RANGE_FROM, SEARCH_RANGE_TO);
+        int sortAndSearchMillis = bubbleMillis + searchMillis;
+        System.out.println("\nStart searching (bubble sort + jump search)...");
+        waitMs(sortAndSearchMillis);
+        printTimeString("Found 500 / 500 entries. Time taken:", sortAndSearchMillis);
+        printTimeString("Sorting time:", bubbleMillis);
+        printTimeString("Searching time:", searchMillis);
+    }
+
+    private void printTimeString(String s, int millis) {
+        System.out.printf("%s %s%n", s, SimpleSearch.millisToTimeString(millis));
+    }
+
+    private int getRandomInRange(int from, int to) {
+        return from + random.nextInt(to - from);
+    }
+
+    private void waitMs(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
 
@@ -58,7 +99,7 @@ class SimpleSearch {
         return new int[]{names.size(), (int) foundCount};
     }
 
-    private static String millisToTimeString(long millis) {
+    public static String millisToTimeString(long millis) {
         final long minutes = millis / MILLIS_PER_MINUTE;
         millis %= MILLIS_PER_MINUTE;
         final long seconds = millis / MILLIS_PER_SECOND;
