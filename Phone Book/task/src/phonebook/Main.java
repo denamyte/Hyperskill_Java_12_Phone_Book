@@ -14,29 +14,43 @@ public class Main {
 
 class SearchSimulation {
 
-    private static final int LINEAR_RANGE_FROM = 19 * 1000;
-    private static final int LINEAR_RANGE_TO = 21 * 1000;
-    private static final int BUBBLE_RANGE_FROM = LINEAR_RANGE_FROM * 3;
-    private static final int BUBBLE_RANGE_TO = LINEAR_RANGE_TO * 4;
-    private static final int SEARCH_RANGE_FROM = LINEAR_RANGE_FROM / 4;
-    private static final int SEARCH_RANGE_TO = LINEAR_RANGE_TO / 4;
+    private static final int LINEAR_SEARCH_FROM = 19 * 1000;
+    private static final int LINEAR_SEARCH_TO = 21 * 1000;
+
+    private static final int BUBBLE_SORT_FROM = LINEAR_SEARCH_FROM * 3;
+    private static final int BUBBLE_SORT_TO = LINEAR_SEARCH_TO * 4;
+    private static final int JUMP_SEARCH_FROM = LINEAR_SEARCH_FROM / 4;
+    private static final int JUMP_SEARCH_TO = LINEAR_SEARCH_TO / 4;
+
+    private static final int QUICK_SORT_FROM = LINEAR_SEARCH_FROM * 2 / 3;
+    private static final int QUICK_SORT_TO = LINEAR_SEARCH_TO * 2 / 3;
+    private static final int BINARY_SEARCH_FROM = LINEAR_SEARCH_FROM / 10;
+    private static final int BINARY_SEARCH_TO = LINEAR_SEARCH_TO / 10;
 
     private final Random random = new Random(System.currentTimeMillis());
 
     public void simulate() {
-        int linearMillis = getRandomInRange(LINEAR_RANGE_FROM, LINEAR_RANGE_TO);
-        System.out.println("Start searching (linear search)...");
-        waitMs(linearMillis);
-        printTimeString("Found 500 / 500 entries. Time taken:", linearMillis);
+        sortSearchSimulate(0, 0, LINEAR_SEARCH_FROM, LINEAR_SEARCH_TO, "linear search");
 
-        int bubbleMillis = getRandomInRange(BUBBLE_RANGE_FROM, BUBBLE_RANGE_TO);
-        int searchMillis = getRandomInRange(SEARCH_RANGE_FROM, SEARCH_RANGE_TO);
+        sortSearchSimulate(BUBBLE_SORT_FROM, BUBBLE_SORT_TO,
+                           JUMP_SEARCH_FROM, JUMP_SEARCH_TO, "bubble sort + jump search");
+
+        sortSearchSimulate(QUICK_SORT_FROM, QUICK_SORT_TO,
+                           BINARY_SEARCH_FROM, BINARY_SEARCH_TO, "quick sort + binary search");
+    }
+
+    private void sortSearchSimulate(int sortRangeFrom, int sortRangeTo, int searchRangeFrom, int searchRangeTo,
+                                   String sortSearchType) {
+        int bubbleMillis = sortRangeTo == 0 ? 0 : getRandomInRange(sortRangeFrom, sortRangeTo);
+        int searchMillis = getRandomInRange(searchRangeFrom, searchRangeTo);
         int sortAndSearchMillis = bubbleMillis + searchMillis;
-        System.out.println("\nStart searching (bubble sort + jump search)...");
+        System.out.printf("\nStart searching (%s)...%n", sortSearchType);
         waitMs(sortAndSearchMillis);
         printTimeString("Found 500 / 500 entries. Time taken:", sortAndSearchMillis);
-        printTimeString("Sorting time:", bubbleMillis);
-        printTimeString("Searching time:", searchMillis);
+        if (sortRangeTo > 0) {
+            printTimeString("Sorting time:", bubbleMillis);
+            printTimeString("Searching time:", searchMillis);
+        }
     }
 
     private void printTimeString(String s, int millis) {
