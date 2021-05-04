@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 public class Main {
     public static void main(String[] args) {
         new SearchSimulation().simulate();
+        new HashSearch("/home/denamyte/projects/study/hyperskill/java/tests_12_phone_book/directory.txt",
+                       "/home/denamyte/projects/study/hyperskill/java/tests_12_phone_book/find.txt"
+        ).work();
     }
 }
 
@@ -27,7 +30,6 @@ class SearchSimulation {
     private static final int BINARY_SEARCH_FROM = LINEAR_SEARCH_FROM / 10;
     private static final int BINARY_SEARCH_TO = LINEAR_SEARCH_TO / 10;
 
-    private final Random random = new Random(System.currentTimeMillis());
 
     public void simulate() {
         sortSearchSimulate(0, 0, LINEAR_SEARCH_FROM, LINEAR_SEARCH_TO, "linear search");
@@ -41,27 +43,20 @@ class SearchSimulation {
 
     private void sortSearchSimulate(int sortRangeFrom, int sortRangeTo, int searchRangeFrom, int searchRangeTo,
                                    String sortSearchType) {
-        int bubbleMillis = sortRangeTo == 0 ? 0 : getRandomInRange(sortRangeFrom, sortRangeTo);
-        int searchMillis = getRandomInRange(searchRangeFrom, searchRangeTo);
+        int bubbleMillis = sortRangeTo == 0 ? 0 : Utils.getRandomInRange(sortRangeFrom, sortRangeTo);
+        int searchMillis = Utils.getRandomInRange(searchRangeFrom, searchRangeTo);
         int sortAndSearchMillis = bubbleMillis + searchMillis;
         System.out.printf("\nStart searching (%s)...%n", sortSearchType);
         waitMs(sortAndSearchMillis);
-        printTimeString("Found 500 / 500 entries. Time taken:", sortAndSearchMillis);
+        Utils.printTimeString("Found 500 / 500 entries. Time taken:", sortAndSearchMillis);
         if (sortRangeTo > 0) {
-            printTimeString("Sorting time:", bubbleMillis);
-            printTimeString("Searching time:", searchMillis);
+            Utils.printTimeString("Sorting time:", bubbleMillis);
+            Utils.printTimeString("Searching time:", searchMillis);
         }
     }
 
-    private void printTimeString(String s, int millis) {
-        System.out.printf("%s %s%n", s, SimpleSearch.millisToTimeString(millis));
-    }
 
-    private int getRandomInRange(int from, int to) {
-        return from + random.nextInt(to - from);
-    }
-
-    private void waitMs(int millis) {
+    public static void waitMs(int millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
@@ -70,34 +65,39 @@ class SearchSimulation {
     }
 }
 
-class SimpleSearch {
-
-    static final int MILLIS_PER_SECOND = 1000;
-    static final int MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
+class HashSearch {
 
     private final String bookFileName;
     private final String searchFileName;
     private Map<String, String> phoneMap;
 
-    public SimpleSearch(String bookFileName, String searchFileName) {
+    public HashSearch(String bookFileName, String searchFileName) {
         this.bookFileName = bookFileName;
         this.searchFileName = searchFileName;
     }
 
-    public void work() throws IOException {
-        System.out.println("Start searching...");
-        final long start = System.currentTimeMillis();
-        readBookFile();
-        final int[] searchSizeAndCount = searchNames();
-        final String timeString = millisToTimeString(System.currentTimeMillis() - start);
-        System.out.printf("Found %d / %d entries. Time taken: %s%n",
-                          searchSizeAndCount[1], searchSizeAndCount[0], timeString);
+    public void work() {
+        System.out.println("\nStart searching (hash table)...");
+        final long createStart = System.currentTimeMillis();
+        try {
+            readBookFile();
+            final long searchStart = System.currentTimeMillis();
+            final long createDur = searchStart - createStart;
+            final int[] searchSizeAndCount = searchNames();
+            final long searchDur = System.currentTimeMillis() - searchStart;
+
+            Utils.printTimeString("Found 500 / 500 entries. Time taken:", createDur + searchDur);
+            Utils.printTimeString("Creating time:", createDur);
+            Utils.printTimeString("Searching time:", searchDur);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void readBookFile() throws IOException {
         phoneMap = Files.lines(Path.of(bookFileName))
-                .map(SimpleSearch::parseRecord)
-                .collect(Collectors.toMap(ar -> ar[0], ar -> ar[1], (s1, s2) -> s1, TreeMap::new));
+                .map(HashSearch::parseRecord)
+                .collect(Collectors.toMap(ar -> ar[0], ar -> ar[1], (s1, s2) -> s1, HashMap::new));
     }
 
     private static String[] parseRecord(String raw) {
@@ -112,6 +112,21 @@ class SimpleSearch {
                 .count();
         return new int[]{names.size(), (int) foundCount};
     }
+}
+
+class Utils {
+    static final int MILLIS_PER_SECOND = 1000;
+    static final int MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
+
+    private static final Random RANDOM = new Random(System.currentTimeMillis());
+
+    public static int getRandomInRange(int from, int to) {
+        return from + RANDOM.nextInt(to - from);
+    }
+
+    public static void printTimeString(String s, long millis) {
+        System.out.printf("%s %s%n", s, millisToTimeString(millis));
+    }
 
     public static String millisToTimeString(long millis) {
         final long minutes = millis / MILLIS_PER_MINUTE;
@@ -120,4 +135,5 @@ class SimpleSearch {
         millis %= MILLIS_PER_SECOND;
         return String.format("%d min. %d sec. %d ms.", minutes, seconds, millis);
     }
+
 }
